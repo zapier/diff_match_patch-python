@@ -92,10 +92,53 @@ diff_match_patch_diff(PyObject *self, PyObject *args, PyObject *kwargs)
     return ret;
 }
 
+template <class STORAGE_TYPE, char FMTSPEC, class CPPTYPE, class PYTYPE>
+static PyObject *
+diff_match_patch_match_main(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    STORAGE_TYPE *a, *b;
+    int loc;
+    float timelimit = 0.0;
+    int matchdistance = 1000;
+    float matchthreshold = 0.5f;
+    char format_spec[64];
+
+    static char *kwlist[] = {
+        strdup("left_document"),
+        strdup("right_document"),
+        strdup("loc"),
+        strdup("timelimit"),
+        strdup("matchdistance"),
+        strdup("matchthreshold"),
+        NULL };
+
+    sprintf(format_spec, "%c%ci|fif", FMTSPEC, FMTSPEC);
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, format_spec, kwlist,
+                                     &a, &b, &loc,
+                                     &timelimit, &matchdistance, &matchthreshold))
+        return NULL;
+
+    typedef diff_match_patch<CPPTYPE> DMP;
+    DMP dmp;
+
+    dmp.Diff_Timeout = timelimit;
+    dmp.Match_Distance = matchdistance;
+    dmp.Match_Threshold = matchthreshold;
+    int rv = dmp.match_main(a, b, loc);
+
+    return Py_BuildValue("i", rv);;
+}
+
 static PyObject *
 diff_match_patch_diff_unicode(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     return diff_match_patch_diff<const wchar_t, 'u', std::wstring, Py_UNICODE>(self, args, kwargs);
+}
+
+static PyObject *
+diff_match_patch_match_main_unicode(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    return diff_match_patch_match_main<const wchar_t, 'u', std::wstring, Py_UNICODE>(self, args, kwargs);
 }
 
 #if PY_MAJOR_VERSION == 2
@@ -105,11 +148,21 @@ diff_match_patch_diff_str(PyObject *self, PyObject *args, PyObject *kwargs)
     return diff_match_patch_diff<const char, 's', std::string, char*>(self, args, kwargs);
 }
 
+static PyObject *
+diff_match_patch_match_main_str(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    return diff_match_patch_match_main<const char, 's', std::string, char*>(self, args, kwargs);
+}
+
 static PyMethodDef MyMethods[] = {
     {"diff_unicode", (PyCFunction)diff_match_patch_diff_unicode, METH_VARARGS|METH_KEYWORDS,
     "Compute the difference between two Unicode strings. Returns a list of tuples (OP, LEN)."},
     {"diff_str", (PyCFunction)diff_match_patch_diff_str, METH_VARARGS|METH_KEYWORDS,
     "Compute the difference between two (regular) strings. Returns a list of tuples (OP, LEN)."},
+    {"match_main_unicode", (PyCFunction)diff_match_patch_match_main_unicode, METH_VARARGS|METH_KEYWORDS,
+    "Locate the best instance of 'pattern' in 'text' near 'loc'. Returns an int."},
+    {"match_main_str", (PyCFunction)diff_match_patch_match_main_str, METH_VARARGS|METH_KEYWORDS,
+    "Locate the best instance of 'pattern' in 'text' near 'loc'. Returns an int."},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
@@ -127,11 +180,21 @@ diff_match_patch_diff_bytes(PyObject *self, PyObject *args, PyObject *kwargs)
     return diff_match_patch_diff<const char, 'y', std::string, char*>(self, args, kwargs);
 }
 
+static PyObject *
+diff_match_patch_match_main_bytes(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    return diff_match_patch_match_main<const char, 'y', std::string, char*>(self, args, kwargs);
+}
+
 static PyMethodDef MyMethods[] = {
     {"diff", (PyCFunction)diff_match_patch_diff_unicode, METH_VARARGS|METH_KEYWORDS,
     "Compute the difference between two strings. Returns a list of tuples (OP, LEN)."},
     {"diff_bytes", (PyCFunction)diff_match_patch_diff_bytes, METH_VARARGS|METH_KEYWORDS,
     "Compute the difference between two byte strings. Returns a list of tuples (OP, LEN)."},
+    {"match_main", (PyCFunction)diff_match_patch_match_main_unicode, METH_VARARGS|METH_KEYWORDS,
+    "Locate the best instance of 'pattern' in 'text' near 'loc'. Returns an int."},
+    {"match_main_bytes", (PyCFunction)diff_match_patch_match_main_bytes, METH_VARARGS|METH_KEYWORDS,
+    "Locate the best instance of 'pattern' in 'text' near 'loc'. Returns an int."},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 

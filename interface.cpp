@@ -188,11 +188,13 @@ diff_match_patch_diff_unicode_python2(PyObject *self, PyObject *args, PyObject *
         Py_INCREF(opcodes[entry.operation]); // we're going to reuse the object, so don't let SetItem steal the reference
         PyTuple_SetItem(tuple, 0, opcodes[entry.operation]);
 
-        if (counts_only)
+        if (counts_only) {
             PyTuple_SetItem(tuple, 1, PyInt_FromLong(entry.text.length()));
-
-        PyObject* obj = PyUnicode_FromWideChar(entry.text.data(), entry.text.size());
-        PyTuple_SetItem(tuple, 1, obj);
+        }
+        else {
+            PyObject* obj = PyUnicode_FromWideChar(entry.text.data(), entry.text.size());
+            PyTuple_SetItem(tuple, 1, obj);
+        }
 
         PyList_Append(ret, tuple);
         Py_DECREF(tuple); // the list owns a reference now
@@ -206,11 +208,39 @@ diff_match_patch_diff_unicode_python2(PyObject *self, PyObject *args, PyObject *
     return ret;
 }
 
+std::string wtoa(const std::wstring& wstr)
+{
+  return std::string(wstr.begin(), wstr.end());
+}
+
+static PyObject *
+match_main_unicode(PyObject *self, PyObject *args)
+{
+    Py_UNICODE *a, *b;
+    int len;
+
+    if (!PyArg_ParseTuple(args, "uui", &a, &b, &len)) {
+        return NULL;
+    }
+
+    std::wstring a_str = to_wstring(a);
+    std::wstring b_str = to_wstring(b);
+
+    typedef diff_match_patch<std::wstring> DMP;
+    DMP dmp;
+
+    int index = dmp.match_main(a_str, b_str, len);
+
+    return Py_BuildValue("i", index);
+}
+
 static PyMethodDef MyMethods[] = {
     {"diff_unicode", (PyCFunction)diff_match_patch_diff_unicode_python2, METH_VARARGS|METH_KEYWORDS,
     "Compute the difference between two Unicode strings. Returns a list of tuples (OP, LEN)."},
     {"diff_str", (PyCFunction)diff_match_patch_diff_str, METH_VARARGS|METH_KEYWORDS,
     "Compute the difference between two (regular) strings. Returns a list of tuples (OP, LEN)."},
+    {"match_main_unicode", (PyCFunction)match_main_unicode, METH_VARARGS|METH_KEYWORDS,
+    "Locate the best instance of 'pattern' in 'text' near 'loc'. Returns -1 if no match found."},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 

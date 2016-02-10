@@ -1,4 +1,5 @@
 #include <Python.h>
+#include <iostream>
 
 #include "diff-match-patch-cpp-stl/diff_match_patch.h"
 
@@ -126,6 +127,11 @@ std::wstring to_wstring(Py_UNICODE* p)
     return std::wstring(buf);
 }
 
+std::string wtoa(const std::wstring& wstr)
+{
+  return std::string(wstr.begin(), wstr.end());
+}
+
 static PyObject *
 diff_match_patch_diff_unicode_python2(PyObject *self, PyObject *args, PyObject *kwargs)
 {
@@ -168,7 +174,16 @@ diff_match_patch_diff_unicode_python2(PyObject *self, PyObject *args, PyObject *
     std::wstring a_str = to_wstring(a);
     std::wstring b_str = to_wstring(b);
 
-    DMP::Diffs diff = dmp.diff_main(a_str, b_str, checklines);
+    DMP::Diffs diff;
+    try {
+        diff = dmp.diff_main(a_str, b_str, checklines);
+    } catch (std::exception& e) {
+        PyErr_SetString(PyExc_RuntimeError, e.what());
+        return NULL;
+    } catch (std::wstring& s) {
+        PyErr_SetString(PyExc_RuntimeError, wtoa(s).c_str());
+        return NULL;
+    }
 
     if (cleanupSemantic)
         dmp.diff_cleanupSemantic(diff);
@@ -208,30 +223,53 @@ diff_match_patch_diff_unicode_python2(PyObject *self, PyObject *args, PyObject *
     return ret;
 }
 
-std::string wtoa(const std::wstring& wstr)
-{
-  return std::string(wstr.begin(), wstr.end());
-}
-
 static PyObject *
-match_main_unicode(PyObject *self, PyObject *args)
+match_main_unicode(PyObject *self, PyObject *args, PyObject *kwargs)
 {
-    Py_UNICODE *a, *b;
-    int len;
+    Py_UNICODE *pattern, *text;
+    int loc;
+    int match_distance = 1000;
+    int match_maxbits = 32;
+    float match_threshold = 0.5;
 
-    if (!PyArg_ParseTuple(args, "uui", &a, &b, &len)) {
+    static char *kwlist[] = {
+        strdup("pattern"),
+        strdup("text"),
+        strdup("loc"),
+        strdup("match_distance"),
+        strdup("match_maxbits"),
+        strdup("match_threshold"),
+        NULL };
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "uui|iif", kwlist,
+                                     &pattern, &text, &loc,
+                                     &match_distance, &match_maxbits, &match_threshold)) {
         return NULL;
     }
 
-    std::wstring a_str = to_wstring(a);
-    std::wstring b_str = to_wstring(b);
+    std::wstring pattern_str = to_wstring(pattern);
+    std::wstring text_str = to_wstring(text);
 
     typedef diff_match_patch<std::wstring> DMP;
     DMP dmp;
 
-    int index = dmp.match_main(a_str, b_str, len);
+    // std::cout << "match_distance: " << match_distance << ", match_threshold: " << match_threshold << std::endl
+    //           << "PATTERN: " << wtoa(pattern_str) << std::endl << "TEXT: " << wtoa(text_str) << std::endl;
 
-    return Py_BuildValue("i", index);
+    dmp.Match_Distance = match_distance;
+    dmp.Match_MaxBits = match_maxbits;
+    dmp.Match_Threshold = match_threshold;
+
+    try {
+        int index = dmp.match_main(pattern_str, text_str, loc);
+        return Py_BuildValue("i", index);
+    } catch (std::exception& e) {
+        PyErr_SetString(PyExc_RuntimeError, e.what());
+        return NULL;
+    } catch (std::wstring& s) {
+        PyErr_SetString(PyExc_RuntimeError, wtoa(s).c_str());
+        return NULL;
+    }
 }
 
 static PyMethodDef MyMethods[] = {

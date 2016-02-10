@@ -1,5 +1,4 @@
 #include <Python.h>
-#include <iostream>
 
 #include "diff-match-patch-cpp-stl/diff_match_patch.h"
 
@@ -93,12 +92,6 @@ diff_match_patch_diff(PyObject *self, PyObject *args, PyObject *kwargs)
     return ret;
 }
 
-static PyObject *
-diff_match_patch_diff_unicode(PyObject *self, PyObject *args, PyObject *kwargs)
-{
-    return diff_match_patch_diff<const wchar_t, 'u', std::wstring, Py_UNICODE>(self, args, kwargs);
-}
-
 #if PY_MAJOR_VERSION == 2
 static PyObject *
 diff_match_patch_diff_str(PyObject *self, PyObject *args, PyObject *kwargs)
@@ -127,7 +120,7 @@ std::wstring to_wstring(Py_UNICODE* p)
     return std::wstring(buf);
 }
 
-std::string wtoa(const std::wstring& wstr)
+std::string wtos(const std::wstring& wstr)
 {
   return std::string(wstr.begin(), wstr.end());
 }
@@ -181,7 +174,7 @@ diff_match_patch_diff_unicode_python2(PyObject *self, PyObject *args, PyObject *
         PyErr_SetString(PyExc_RuntimeError, e.what());
         return NULL;
     } catch (std::wstring& s) {
-        PyErr_SetString(PyExc_RuntimeError, wtoa(s).c_str());
+        PyErr_SetString(PyExc_RuntimeError, wtos(s).c_str());
         return NULL;
     }
 
@@ -214,6 +207,7 @@ diff_match_patch_diff_unicode_python2(PyObject *self, PyObject *args, PyObject *
         PyList_Append(ret, tuple);
         Py_DECREF(tuple); // the list owns a reference now
     }
+
 
     // We're left with one extra reference.
     Py_DECREF(opcodes[dmp.DELETE]);
@@ -253,9 +247,6 @@ match_main_unicode(PyObject *self, PyObject *args, PyObject *kwargs)
     typedef diff_match_patch<std::wstring> DMP;
     DMP dmp;
 
-    // std::cout << "match_distance: " << match_distance << ", match_threshold: " << match_threshold << std::endl
-    //           << "PATTERN: " << wtoa(pattern_str) << std::endl << "TEXT: " << wtoa(text_str) << std::endl;
-
     dmp.Match_Distance = match_distance;
     dmp.Match_MaxBits = match_maxbits;
     dmp.Match_Threshold = match_threshold;
@@ -267,7 +258,7 @@ match_main_unicode(PyObject *self, PyObject *args, PyObject *kwargs)
         PyErr_SetString(PyExc_RuntimeError, e.what());
         return NULL;
     } catch (std::wstring& s) {
-        PyErr_SetString(PyExc_RuntimeError, wtoa(s).c_str());
+        PyErr_SetString(PyExc_RuntimeError, wtos(s).c_str());
         return NULL;
     }
 }

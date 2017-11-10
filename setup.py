@@ -8,7 +8,7 @@ module1 = Extension('diff_match_patch',
                     include_dirs = [],
                     libraries = [])
 
-setup (
+setup(
 	name='diff_match_patch_python',
 	version='1.0.2',
     packages = find_packages(),
@@ -18,6 +18,7 @@ setup (
     license='CC0 (copyright waived)',
 	description=u'A Python extension module that wraps Google\'s diff_match_patch C++ implementation for very fast string comparisons. Version 1.0.2 fixes a build issue on Macs.',
     long_description=open("README.rst").read(),
-    keywords = "diff compare Google match patch diff_match_patch extension native C fast",
-	ext_modules = [module1],
-	)
+    keywords="diff compare Google match patch diff_match_patch extension native C fast",
+	ext_modules=[module1],
+    test_suite='tests',
+)

@@ -31,6 +31,8 @@ class MatchTests(unittest.TestCase):
 
         self.assertEqual(0, match_main('abcdef', 'abcdefy', 0))
 
+        self.assertEqual(2, match_main('abc\u2192def', 'c\u2192defy', 0))
+
     def test_bytes(self):
         self.assertEqual(0, match_main_bytes(b'abcdef', b'abcdef', 1000))
 
@@ -43,3 +45,5 @@ class MatchTests(unittest.TestCase):
         self.assertEqual(3, match_main_bytes(b'abcdef', b'defy', 4))
 
         self.assertEqual(0, match_main_bytes(b'abcdef', b'abcdefy', 0))
+
+        self.assertEqual(2, match_main_bytes(b'abc\xe2\x86\x92def', b'c\xe2\x86\x92defy', 0))

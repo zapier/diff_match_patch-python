@@ -1,4 +1,6 @@
 #include <Python.h>
+#include <locale>
+#include <codecvt>
 
 #include "diff-match-patch-cpp-stl/diff_match_patch.h"
 
@@ -123,7 +125,8 @@ struct call_traits<'u'> {
 
     // Convert std::strings to char*s
     static const char* to_bytes(std::wstring& value) {
-        return (char*) value.c_str();
+        std::wstring_convert<std::codecvt_utf8<wchar_t> > encode;
+        return encode.to_bytes(value).c_str();
     }
 };
 

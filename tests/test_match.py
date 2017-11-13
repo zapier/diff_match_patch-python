@@ -19,27 +19,27 @@ else:
 
 class MatchTests(unittest.TestCase):
     def test_unicode(self):
-        self.assertEquals(0, match_main('abcdef', 'abcdef', 1000))
+        self.assertEqual(0, match_main('abcdef', 'abcdef', 1000))
 
-        self.assertEquals(-1, match_main('', 'abcdef', 1))
+        self.assertEqual(-1, match_main('', 'abcdef', 1))
 
-        self.assertEquals(3, match_main('abcdef', '', 3))
+        self.assertEqual(3, match_main('abcdef', '', 3))
 
-        self.assertEquals(3, match_main('abcdef', 'de', 3))
+        self.assertEqual(3, match_main('abcdef', 'de', 3))
 
-        self.assertEquals(3, match_main('abcdef', 'defy', 4))
+        self.assertEqual(3, match_main('abcdef', 'defy', 4))
 
-        self.assertEquals(0, match_main('abcdef', 'abcdefy', 0))
+        self.assertEqual(0, match_main('abcdef', 'abcdefy', 0))
 
     def test_bytes(self):
-        self.assertEquals(0, match_main_bytes(b'abcdef', b'abcdef', 1000))
+        self.assertEqual(0, match_main_bytes(b'abcdef', b'abcdef', 1000))
 
-        self.assertEquals(-1, match_main_bytes(b'', b'abcdef', 1))
+        self.assertEqual(-1, match_main_bytes(b'', b'abcdef', 1))
 
-        self.assertEquals(3, match_main_bytes(b'abcdef', b'', 3))
+        self.assertEqual(3, match_main_bytes(b'abcdef', b'', 3))
 
-        self.assertEquals(3, match_main_bytes(b'abcdef', b'de', 3))
+        self.assertEqual(3, match_main_bytes(b'abcdef', b'de', 3))
 
-        self.assertEquals(3, match_main_bytes(b'abcdef', b'defy', 4))
+        self.assertEqual(3, match_main_bytes(b'abcdef', b'defy', 4))
 
-        self.assertEquals(0, match_main_bytes(b'abcdef', b'abcdefy', 0))
+        self.assertEqual(0, match_main_bytes(b'abcdef', b'abcdefy', 0))

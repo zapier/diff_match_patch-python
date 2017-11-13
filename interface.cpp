@@ -122,15 +122,74 @@ struct call_traits<'u'> {
         return ret;
     }
 
-    struct utf8 : public std::codecvt<wchar_t, char, mbstate_t> {
-        virtual ~utf8(void) {}
-    };
-
-    // Convert std::strings to char*s
+#if PY_MAJOR_VERSION == 2 || (PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION <= 4)
     static const char* to_bytes(std::wstring& value) {
-        std::wstring_convert<utf8> encode;
-        return encode.to_bytes(value).c_str();
+        const wchar_t *text = value.c_str();
+        const size_t len = wcslen(text);
+        char *result = NULL, *bytes = NULL;
+        size_t i, size, converted;
+        wchar_t c, buf[2];
+
+        /* The function works in two steps:
+           1. compute the length of the output buffer in bytes (size)
+           2. outputs the bytes */
+        size = 0;
+        buf[1] = 0;
+        while (1) {
+            for (i=0; i < len; i++) {
+                c = text[i];
+                if (c >= 0xdc80 && c <= 0xdcff) {
+                    /* UTF-8b surrogate */
+                    if (bytes != NULL) {
+                        *bytes++ = c - 0xdc00;
+                        size--;
+                    }
+                    else
+                        size++;
+                    continue;
+                }
+                else {
+                    buf[0] = c;
+                    if (bytes != NULL)
+                        converted = wcstombs(bytes, buf, size);
+                    else
+                        converted = wcstombs(NULL, buf, 0);
+                    if (converted == (size_t)-1) {
+                        if (result != NULL)
+                            PyMem_Free(result);
+                        // if (error_pos != NULL)
+                        //     *error_pos = i;
+                        return NULL;
+                    }
+                    if (bytes != NULL) {
+                        bytes += converted;
+                        size -= converted;
+                    }
+                    else
+                        size += converted;
+                }
+            }
+            if (result != NULL) {
+                *bytes = '\0';
+                break;
+            }
+
+            size += 1; /* nul byte at the end */
+            result = (char *) PyMem_Malloc(size);
+            if (result == NULL) {
+                // if (error_pos != NULL)
+                //     *error_pos = (size_t)-1;
+                return NULL;
+            }
+            bytes = result;
+        }
+        return result;
     }
+#else
+    static const char* to_bytes(std::wstring& value) {
+        return Py_EncodeLocale(value.c_str(), NULL);
+    }
+#endif
 };
 
 // actual function

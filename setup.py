@@ -12,7 +12,7 @@ module1 = Extension('diff_match_patch',
 
 setup(
     name='diff_match_patch_python',
-    version='1.0.2',
+    version='1.0.2.post1',
     description=u'A Python extension module that wraps Google\'s diff_match_patch C++ implementation for very fast string comparisons. Version 1.0.2 fixes a build issue on Macs.',
     long_description=open("README.rst").read(),
     author=u'Joshua Tauberer',

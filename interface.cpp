@@ -301,7 +301,7 @@ initdiff_match_patch(void)
 
 #if PY_MAJOR_VERSION == 3
 static PyObject *
-diff_match_patch_match_main_bytes(PyObject *self, PyObject *args, PyObject *kwargs)
+diff_match_patch_diff_bytes(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     return diff_match_patch_diff<'y'>(self, args, kwargs);
 }
